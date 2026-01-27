@@ -32,6 +32,7 @@ class Configuration:
     def __init__(self, **kwargs):
         # Initialize from kwargs or environment variables
         self._max_web_research_loops = kwargs.get("max_web_research_loops")
+        self._min_sources = kwargs.get("min_sources")
         self._search_api = kwargs.get("search_api")
         self._fetch_full_page = kwargs.get("fetch_full_page")
         self._include_raw_content = kwargs.get("include_raw_content")
@@ -55,6 +56,16 @@ class Configuration:
         env_value = os.environ.get("MAX_WEB_RESEARCH_LOOPS")
         print(f"Reading MAX_WEB_RESEARCH_LOOPS from environment: {env_value}")
         return int(env_value or "10")
+
+    @property
+    def min_sources(self) -> Optional[int]:
+        if self._min_sources is not None:
+            return int(self._min_sources)
+
+        env_value = os.environ.get("MIN_SOURCES")
+        if env_value is None or env_value == "":
+            return None
+        return int(env_value)
 
     """
     Maximum number of web research loops to perform before finalizing.
@@ -170,6 +181,7 @@ class Configuration:
         # Config properties to check
         properties = [
             "max_web_research_loops",
+            "min_sources",
             "search_api",
             "fetch_full_page",
             "include_raw_content",

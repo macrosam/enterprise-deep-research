@@ -518,6 +518,8 @@ class ResearchService:
         queue: Optional[Queue] = None,
         provider: Optional[str] = None,
         model: Optional[str] = None,
+        max_web_research_loops: Optional[int] = None,
+        min_sources: Optional[int] = None,
         uploaded_data_content: Optional[str] = None,
         uploaded_files: Optional[List[str]] = None,
         steering_enabled: bool = False,
@@ -582,6 +584,9 @@ class ResearchService:
         )
         logger.info(
             f"Provider: {provider or os.environ.get('LLM_PROVIDER', 'openai')}, Model: {model or os.environ.get('LLM_MODEL', 'o3-mini')}"
+        )
+        logger.info(
+            f"Max loops override: {max_web_research_loops}, Min sources: {min_sources}"
         )
         logger.info(f"Uploaded data content present: {bool(uploaded_data_content)}")
 
@@ -730,6 +735,8 @@ class ResearchService:
                     "llm_model": model,
                     "user_prompt": query,
                     "database_info": database_info,  # Store database_info in config
+                    "max_web_research_loops": max_web_research_loops,
+                    "min_sources": min_sources,
                 }
             }
 
@@ -747,6 +754,8 @@ class ResearchService:
                     "llm_model": model,  # Pass model from request
                     "user_prompt": query,  # Pass query from request
                     "database_info": database_info,  # Pass database_info to LangGraph
+                    "max_web_research_loops": max_web_research_loops,
+                    "min_sources": min_sources,
                     # Add other request-specific config here if needed
                     # e.g., "search_depth": search_depth_from_request
                 },

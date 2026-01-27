@@ -234,12 +234,9 @@ def get_max_loops(
         return 1
 
     env_max_loops = os.environ.get("MAX_WEB_RESEARCH_LOOPS")
-    base_max_loops = (
-        int(env_max_loops)
-        if env_max_loops
-        else int(configurable.max_web_research_loops)
-    )
-    print(f"  - Reading MAX_WEB_RESEARCH_LOOPS from environment: {env_max_loops}")
+    base_max_loops = int(configurable.max_web_research_loops)
+    if env_max_loops:
+        print(f"  - Reading MAX_WEB_RESEARCH_LOOPS from environment: {env_max_loops}")
 
     max_loops = base_max_loops
 
@@ -1505,6 +1502,26 @@ When evaluating completeness, consider:
                 if not knowledge_gap:
                     knowledge_gap = "Process pending steering messages"
 
+            min_sources = getattr(configurable, "min_sources", None)
+            try:
+                min_sources_value = int(min_sources) if min_sources is not None else None
+            except (TypeError, ValueError):
+                min_sources_value = None
+
+            if min_sources_value and not minimum_effort:
+                current_sources = len(getattr(state, "sources_gathered", []))
+                if current_sources < min_sources_value:
+                    logger.info(
+                        f"[REFLECT] Forcing more research: sources {current_sources} < min_sources {min_sources_value}"
+                    )
+                    research_complete = False
+                    if not knowledge_gap:
+                        knowledge_gap = (
+                            f"Need at least {min_sources_value} sources (have {current_sources})"
+                        )
+                    if not search_query:
+                        search_query = f"More sources and references about {research_topic}"
+
             # Extract the research_topic field, or use the original if not provided
             preserved_research_topic = result.get("research_topic", research_topic)
 
@@ -1835,9 +1852,17 @@ When evaluating completeness, consider:
             current_sources = getattr(state, "sources_gathered", [])
             num_sources = len(current_sources)
 
-            if num_sources < 3:
-                knowledge_gap = "Need more comprehensive sources"
-                search_query = f"More detailed information about {research_topic}"
+            min_sources = getattr(configurable, "min_sources", None)
+            try:
+                min_sources_value = int(min_sources) if min_sources is not None else 3
+            except (TypeError, ValueError):
+                min_sources_value = 3
+
+            if num_sources < min_sources_value:
+                knowledge_gap = (
+                    f"Need more sources ({num_sources}/{min_sources_value})"
+                )
+                search_query = f"More sources and references about {research_topic}"
             else:
                 knowledge_gap = "Need specific examples and case studies"
                 search_query = f"Examples and case studies of {research_topic}"

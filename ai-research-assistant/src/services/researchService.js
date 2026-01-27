@@ -9,6 +9,9 @@ let lastBenchmarkMode = false;
 let lastModelProvider = null;
 let lastModelName = null;
 let lastUploadedFileContent = null; // Added to store uploaded file content
+let lastMaxWebResearchLoops = null;
+let lastMinSources = null;
+let lastDatabaseInfo = null;
 let isReconnecting = false;
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 3;
@@ -169,6 +172,8 @@ export const startResearch = async (
   benchmarkMode = false,
   provider = null,
   model = null,
+  maxWebResearchLoops = null,
+  minSources = null,
   uploadedFileContent = null, // Add uploadedFileContent parameter
   databaseInfo = null, // Add databaseInfo parameter
   onEventHandler,
@@ -176,7 +181,7 @@ export const startResearch = async (
   onErrorHandler,
   enableSteering = true // Add steering parameter
 ) => {
-  console.log('[DEBUG] startResearch called with:', { query, provider, model, uploadedFileContent, databaseInfo });
+  console.log('[DEBUG] startResearch called with:', { query, provider, model, maxWebResearchLoops, minSources, uploadedFileContent, databaseInfo });
 
   // Store the handlers in module-level variables so connectToEventSource can access them
   onEvent = onEventHandler;
@@ -208,7 +213,7 @@ export const startResearch = async (
     // console.log(`Starting research with URL: ${apiUrl}, steering: ${enableSteering}`);
 
     // Log the extra effort and minimum effort settings
-    console.log(`Research settings: extraEffort=${extraEffort}, minimumEffort=${minimumEffort}, benchmarkMode=${benchmarkMode}`);
+    console.log(`Research settings: extraEffort=${extraEffort}, minimumEffort=${minimumEffort}, benchmarkMode=${benchmarkMode}, maxLoops=${maxWebResearchLoops}, minSources=${minSources}`);
 
     // Store current request parameters for potential reconnection
     lastQuery = query;
@@ -218,6 +223,9 @@ export const startResearch = async (
     lastModelProvider = provider;
     lastModelName = model;
     lastUploadedFileContent = uploadedFileContent;
+    lastMaxWebResearchLoops = maxWebResearchLoops;
+    lastMinSources = minSources;
+    lastDatabaseInfo = databaseInfo;
 
     // Reset research completion flag
     isResearchComplete = false;
@@ -236,7 +244,7 @@ export const startResearch = async (
     lastRequestTimestamp = now;
 
     // Check if this request is already in progress
-    const requestKey = `${query}-${extraEffort}-${minimumEffort}-${benchmarkMode}-${provider}-${model}`;
+    const requestKey = `${query}-${extraEffort}-${minimumEffort}-${benchmarkMode}-${provider}-${model}-${maxWebResearchLoops || "no_max"}-${minSources || "no_min"}`;
     if (requestsInProgress.has(requestKey)) {
       console.log('Request already in progress, ignoring duplicate');
       return;
@@ -272,6 +280,12 @@ export const startResearch = async (
     }
     if (model) {
       requestBody.model = model;
+    }
+    if (maxWebResearchLoops !== null && maxWebResearchLoops !== undefined) {
+      requestBody.max_web_research_loops = maxWebResearchLoops;
+    }
+    if (minSources !== null && minSources !== undefined) {
+      requestBody.min_sources = minSources;
     }
 
     // Convert uploadedFileContent array to string if provided
@@ -975,7 +989,21 @@ const handleConnectionLoss = (cleanupFn) => {
         // Schedule reconnection
         if (lastQuery) {
           console.log(`Attempting to reconnect for query: "${lastQuery}"`);
-          startResearch(lastQuery, lastExtraEffort, lastMinimumEffort, lastBenchmarkMode, lastModelProvider, lastModelName, lastUploadedFileContent, onEvent, onComplete, onError);
+          startResearch(
+            lastQuery,
+            lastExtraEffort,
+            lastMinimumEffort,
+            lastBenchmarkMode,
+            lastModelProvider,
+            lastModelName,
+            lastMaxWebResearchLoops,
+            lastMinSources,
+            lastUploadedFileContent,
+            lastDatabaseInfo,
+            onEvent,
+            onComplete,
+            onError
+          );
         } else {
           console.error('No previous query to reconnect to.');
           isReconnecting = false;

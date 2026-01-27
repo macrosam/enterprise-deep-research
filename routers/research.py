@@ -101,6 +101,8 @@ async def deep_research(request: ResearchRequest, background_tasks: BackgroundTa
             queue=queue,  # Pass the queue instance
             provider=request.provider,
             model=request.model,
+            max_web_research_loops=request.max_web_research_loops,
+            min_sources=request.min_sources,
             uploaded_data_content=request.uploaded_data_content,  # Pass uploaded content
             database_info=request.database_info,  # Pass database information
             uploaded_files=request.uploaded_files,  # Pass uploaded file IDs
@@ -131,6 +133,8 @@ async def deep_research(request: ResearchRequest, background_tasks: BackgroundTa
                 queue=None,  # No queue needed
                 provider=request.provider,
                 model=request.model,
+                max_web_research_loops=request.max_web_research_loops,
+                min_sources=request.min_sources,
                 uploaded_data_content=request.uploaded_data_content,  # Pass uploaded content
                 database_info=request.database_info,  # Pass database information
                 uploaded_files=request.uploaded_files,  # Pass uploaded file IDs

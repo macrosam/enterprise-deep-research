@@ -14,6 +14,8 @@ function App() {
   const [modelName, setModelName] = useState('gemini-2.5-pro'); // Default model
   const [uploadedFileContent, setUploadedFileContent] = useState(null); // Added state for uploaded file content
   const [databaseInfo, setDatabaseInfo] = useState(null); // Added state for database info
+  const [maxWebResearchLoops, setMaxWebResearchLoops] = useState(null);
+  const [minSources, setMinSources] = useState(null);
 
   const [isDetailsPanelOpen, setIsDetailsPanelOpen] = useState(false);
   const [detailsPanelContentType, setDetailsPanelContentType] = useState(null); // 'item' or 'report'
@@ -23,7 +25,7 @@ function App() {
   const [currentTodoPlan, setCurrentTodoPlan] = useState("");
   const [todoPlanVersion, setTodoPlanVersion] = useState(0);
 
-  const handleBeginResearch = useCallback((query, extra, minimum, benchmark, modelConfig, fileContent, databaseInfo) => { // Added fileContent and databaseInfo
+  const handleBeginResearch = useCallback((query, extra, minimum, benchmark, modelConfig, fileContent, databaseInfo, advancedConfig) => { // Added fileContent and databaseInfo
     setCurrentQuery(query);
     setExtraEffort(extra);
     setMinimumEffort(minimum);
@@ -38,6 +40,13 @@ function App() {
     if (databaseInfo && databaseInfo.length > 0) {
       console.log('Database info passed to research agent:', databaseInfo);
       setDatabaseInfo(databaseInfo); // Store database info in state
+    }
+    if (advancedConfig) {
+      setMaxWebResearchLoops(advancedConfig.maxWebResearchLoops ?? null);
+      setMinSources(advancedConfig.minSources ?? null);
+    } else {
+      setMaxWebResearchLoops(null);
+      setMinSources(null);
     }
     setIsResearching(true);
     setIsDetailsPanelOpen(false); // Close details panel when new research starts
@@ -159,6 +168,8 @@ function App() {
             benchmarkMode={benchmarkMode}
             modelProvider={modelProvider}
             modelName={modelName}
+            maxWebResearchLoops={maxWebResearchLoops}
+            minSources={minSources}
             uploadedFileContent={uploadedFileContent} // Pass uploadedFileContent
             databaseInfo={databaseInfo} // Pass databaseInfo
             isResearching={isResearching}

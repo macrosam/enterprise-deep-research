@@ -122,6 +122,9 @@ export default function InitialScreen({ onBeginResearch }) {
   const [uploadedFiles, setUploadedFiles] = useState([])
   const [uploadedFileContents, setUploadedFileContents] = useState([])
   const [isDragging, setIsDragging] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [maxLoops, setMaxLoops] = useState("")
+  const [minSources, setMinSources] = useState("")
 
   // New state for Investigate mode file analysis
   const [investigateFiles, setInvestigateFiles] = useState([])
@@ -468,6 +471,12 @@ export default function InitialScreen({ onBeginResearch }) {
 
     const [provider] = selectedModelOption.key.split("-", 2)
     const modelName = selectedModelOption.model
+    const maxLoopsValue = Number.parseInt(maxLoops, 10)
+    const minSourcesValue = Number.parseInt(minSources, 10)
+    const advancedConfig = {
+      maxWebResearchLoops: Number.isFinite(maxLoopsValue) ? maxLoopsValue : null,
+      minSources: Number.isFinite(minSourcesValue) ? minSourcesValue : null,
+    }
 
     // Prepare file content for the research request
     const fileContent = mode === "ask" ?
@@ -501,6 +510,7 @@ export default function InitialScreen({ onBeginResearch }) {
       },
       fileContent,
       databaseInfo, // Pass database information to the research agent
+      advancedConfig,
     )
 
     setTimeout(() => {
@@ -788,6 +798,67 @@ export default function InitialScreen({ onBeginResearch }) {
               ))}
             </div>
           </div>
+
+          {mode === "report" && (
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-[#032d60] transition-colors"
+                aria-expanded={showAdvanced}
+              >
+                <span>Advanced options</span>
+                <svg
+                  className={`h-4 w-4 transform transition-transform ${showAdvanced ? "rotate-180" : ""}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {showAdvanced && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-white/70 border border-slate-200/60 rounded-xl p-4">
+                  <div className="space-y-1.5">
+                    <label htmlFor="max-loops" className="text-xs font-semibold text-slate-600">
+                      Max research loops
+                    </label>
+                    <input
+                      id="max-loops"
+                      type="number"
+                      min="1"
+                      max="25"
+                      inputMode="numeric"
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0176d3]/40"
+                      placeholder="e.g. 10"
+                      value={maxLoops}
+                      onChange={(e) => setMaxLoops(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="min-sources" className="text-xs font-semibold text-slate-600">
+                      Min sources
+                    </label>
+                    <input
+                      id="min-sources"
+                      type="number"
+                      min="1"
+                      max="50"
+                      inputMode="numeric"
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0176d3]/40"
+                      placeholder="e.g. 12"
+                      value={minSources}
+                      onChange={(e) => setMinSources(e.target.value)}
+                    />
+                  </div>
+                  <div className="md:col-span-2 text-xs text-slate-500">
+                    Higher values increase runtime and cost. Leave blank to use defaults.
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Control Panel - Attached to card */}
@@ -895,4 +966,3 @@ export default function InitialScreen({ onBeginResearch }) {
     </div>
   )
 }
-
