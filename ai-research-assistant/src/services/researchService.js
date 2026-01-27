@@ -9,6 +9,9 @@ let lastBenchmarkMode = false;
 let lastModelProvider = null;
 let lastModelName = null;
 let lastUploadedFileContent = null; // Added to store uploaded file content
+let lastDatabaseInfo = null;
+let lastMaxWebResearchLoops = null;
+let lastTargetWordCount = null;
 let isReconnecting = false;
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 3;
@@ -171,12 +174,22 @@ export const startResearch = async (
   model = null,
   uploadedFileContent = null, // Add uploadedFileContent parameter
   databaseInfo = null, // Add databaseInfo parameter
+  maxWebResearchLoops = null,
+  targetWordCount = null,
   onEventHandler,
   onCompleteHandler,
   onErrorHandler,
   enableSteering = true // Add steering parameter
 ) => {
-  console.log('[DEBUG] startResearch called with:', { query, provider, model, uploadedFileContent, databaseInfo });
+  console.log('[DEBUG] startResearch called with:', {
+    query,
+    provider,
+    model,
+    uploadedFileContent,
+    databaseInfo,
+    maxWebResearchLoops,
+    targetWordCount,
+  });
 
   // Store the handlers in module-level variables so connectToEventSource can access them
   onEvent = onEventHandler;
@@ -218,6 +231,9 @@ export const startResearch = async (
     lastModelProvider = provider;
     lastModelName = model;
     lastUploadedFileContent = uploadedFileContent;
+    lastDatabaseInfo = databaseInfo;
+    lastMaxWebResearchLoops = maxWebResearchLoops;
+    lastTargetWordCount = targetWordCount;
 
     // Reset research completion flag
     isResearchComplete = false;
@@ -272,6 +288,12 @@ export const startResearch = async (
     }
     if (model) {
       requestBody.model = model;
+    }
+    if (Number.isInteger(maxWebResearchLoops)) {
+      requestBody.max_web_research_loops = maxWebResearchLoops;
+    }
+    if (Number.isInteger(targetWordCount)) {
+      requestBody.target_word_count = targetWordCount;
     }
 
     // Convert uploadedFileContent array to string if provided
@@ -975,7 +997,21 @@ const handleConnectionLoss = (cleanupFn) => {
         // Schedule reconnection
         if (lastQuery) {
           console.log(`Attempting to reconnect for query: "${lastQuery}"`);
-          startResearch(lastQuery, lastExtraEffort, lastMinimumEffort, lastBenchmarkMode, lastModelProvider, lastModelName, lastUploadedFileContent, onEvent, onComplete, onError);
+          startResearch(
+            lastQuery,
+            lastExtraEffort,
+            lastMinimumEffort,
+            lastBenchmarkMode,
+            lastModelProvider,
+            lastModelName,
+            lastUploadedFileContent,
+            lastDatabaseInfo,
+            lastMaxWebResearchLoops,
+            lastTargetWordCount,
+            onEvent,
+            onComplete,
+            onError
+          );
         } else {
           console.error('No previous query to reconnect to.');
           isReconnecting = false;

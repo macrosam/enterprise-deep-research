@@ -58,6 +58,8 @@ async def deep_research(request: ResearchRequest, background_tasks: BackgroundTa
     logger.info(
         f"Benchmark mode: {request.benchmark_mode} (type: {type(request.benchmark_mode)})"
     )
+    logger.info(f"Max loops override: {request.max_web_research_loops}")
+    logger.info(f"Target word count: {request.target_word_count}")
 
     # Enhanced logging for uploaded content
     if request.uploaded_data_content:
@@ -96,6 +98,8 @@ async def deep_research(request: ResearchRequest, background_tasks: BackgroundTa
             extra_effort=request.extra_effort,
             minimum_effort=request.minimum_effort,
             benchmark_mode=request.benchmark_mode,
+            max_web_research_loops=request.max_web_research_loops,
+            target_word_count=request.target_word_count,
             streaming=True,
             stream_id=stream_id,
             queue=queue,  # Pass the queue instance
@@ -126,6 +130,8 @@ async def deep_research(request: ResearchRequest, background_tasks: BackgroundTa
                 extra_effort=request.extra_effort,
                 minimum_effort=request.minimum_effort,
                 benchmark_mode=request.benchmark_mode,
+                max_web_research_loops=request.max_web_research_loops,
+                target_word_count=request.target_word_count,
                 streaming=False,
                 stream_id=None,  # No stream_id needed
                 queue=None,  # No queue needed

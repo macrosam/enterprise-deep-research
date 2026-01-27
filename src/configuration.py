@@ -32,6 +32,7 @@ class Configuration:
     def __init__(self, **kwargs):
         # Initialize from kwargs or environment variables
         self._max_web_research_loops = kwargs.get("max_web_research_loops")
+        self._target_word_count = kwargs.get("target_word_count")
         self._search_api = kwargs.get("search_api")
         self._fetch_full_page = kwargs.get("fetch_full_page")
         self._include_raw_content = kwargs.get("include_raw_content")
@@ -55,6 +56,13 @@ class Configuration:
         env_value = os.environ.get("MAX_WEB_RESEARCH_LOOPS")
         print(f"Reading MAX_WEB_RESEARCH_LOOPS from environment: {env_value}")
         return int(env_value or "10")
+
+    @property
+    def target_word_count(self) -> Optional[int]:
+        if self._target_word_count is not None:
+            return int(self._target_word_count)
+        env_value = os.environ.get("TARGET_WORD_COUNT")
+        return int(env_value) if env_value else None
 
     """
     Maximum number of web research loops to perform before finalizing.
@@ -170,6 +178,7 @@ class Configuration:
         # Config properties to check
         properties = [
             "max_web_research_loops",
+            "target_word_count",
             "search_api",
             "fetch_full_page",
             "include_raw_content",

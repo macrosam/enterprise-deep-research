@@ -14,6 +14,8 @@ function App() {
   const [modelName, setModelName] = useState('gemini-2.5-pro'); // Default model
   const [uploadedFileContent, setUploadedFileContent] = useState(null); // Added state for uploaded file content
   const [databaseInfo, setDatabaseInfo] = useState(null); // Added state for database info
+  const [maxWebResearchLoops, setMaxWebResearchLoops] = useState(null);
+  const [targetWordCount, setTargetWordCount] = useState(null);
 
   const [isDetailsPanelOpen, setIsDetailsPanelOpen] = useState(false);
   const [detailsPanelContentType, setDetailsPanelContentType] = useState(null); // 'item' or 'report'
@@ -23,7 +25,7 @@ function App() {
   const [currentTodoPlan, setCurrentTodoPlan] = useState("");
   const [todoPlanVersion, setTodoPlanVersion] = useState(0);
 
-  const handleBeginResearch = useCallback((query, extra, minimum, benchmark, modelConfig, fileContent, databaseInfo) => { // Added fileContent and databaseInfo
+  const handleBeginResearch = useCallback((query, extra, minimum, benchmark, modelConfig, fileContent, databaseInfo, loops, words) => { // Added fileContent and databaseInfo
     setCurrentQuery(query);
     setExtraEffort(extra);
     setMinimumEffort(minimum);
@@ -34,6 +36,8 @@ function App() {
     }
 
     setUploadedFileContent(fileContent); // Set uploaded file content
+    setMaxWebResearchLoops(loops);
+    setTargetWordCount(words);
     // Store database info for the research agent
     if (databaseInfo && databaseInfo.length > 0) {
       console.log('Database info passed to research agent:', databaseInfo);
@@ -161,6 +165,8 @@ function App() {
             modelName={modelName}
             uploadedFileContent={uploadedFileContent} // Pass uploadedFileContent
             databaseInfo={databaseInfo} // Pass databaseInfo
+            maxWebResearchLoops={maxWebResearchLoops}
+            targetWordCount={targetWordCount}
             isResearching={isResearching}
             onBeginResearch={handleBeginResearch}
             onReportGenerated={handleReportGenerated}

@@ -112,6 +112,29 @@ const RESEARCH_REPORT_QUERIES = [
   "How is artificial intelligence transforming healthcare?",
 ]
 
+const WORD_TARGET_PRESETS = {
+  quick: 1200,
+  standard: 3600,
+  high: 6000,
+}
+
+const WORDS_PER_LOOP = 1200
+const MIN_TARGET_WORDS = 800
+const MAX_TARGET_WORDS = 12000
+const MIN_LOOPS = 1
+const MAX_LOOPS = 20
+
+const clampValue = (value, min, max) => Math.min(max, Math.max(min, value))
+
+const estimateLoopsForWords = (targetWords) =>
+  clampValue(Math.round(targetWords / WORDS_PER_LOOP), MIN_LOOPS, MAX_LOOPS)
+
+const estimateWordRange = (loops) => {
+  const low = Math.max(1, Math.round(loops * WORDS_PER_LOOP * 0.8))
+  const high = Math.max(low, Math.round(loops * WORDS_PER_LOOP * 1.2))
+  return [low, high]
+}
+
 export default function InitialScreen({ onBeginResearch }) {
   const [question, setQuestion] = useState("")
   const [effortLevel, setEffortLevel] = useState("standard")
@@ -122,6 +145,10 @@ export default function InitialScreen({ onBeginResearch }) {
   const [uploadedFiles, setUploadedFiles] = useState([])
   const [uploadedFileContents, setUploadedFileContents] = useState([])
   const [isDragging, setIsDragging] = useState(false)
+  const [targetWordCount, setTargetWordCount] = useState(
+    WORD_TARGET_PRESETS.standard,
+  )
+  const [isCustomLength, setIsCustomLength] = useState(false)
 
   // New state for Investigate mode file analysis
   const [investigateFiles, setInvestigateFiles] = useState([])
@@ -129,6 +156,24 @@ export default function InitialScreen({ onBeginResearch }) {
   const [isInvestigateDragging, setIsInvestigateDragging] = useState(false)
   const [fileAnalysisResults, setFileAnalysisResults] = useState({})
 
+  const estimatedLoops = estimateLoopsForWords(targetWordCount)
+  const [estimatedLowWords, estimatedHighWords] = estimateWordRange(estimatedLoops)
+
+  const applyEffortPreset = (level) => {
+    setEffortLevel(level)
+    setTargetWordCount(WORD_TARGET_PRESETS[level] || WORD_TARGET_PRESETS.standard)
+    setIsCustomLength(false)
+  }
+
+  const handleTargetWordCountChange = (value) => {
+    const nextValue = clampValue(
+      Number.parseInt(value, 10) || MIN_TARGET_WORDS,
+      MIN_TARGET_WORDS,
+      MAX_TARGET_WORDS,
+    )
+    setTargetWordCount(nextValue)
+    setIsCustomLength(true)
+  }
 
   const processFiles = (files) => {
     if (files.length > 0) {
@@ -461,8 +506,10 @@ export default function InitialScreen({ onBeginResearch }) {
     setIsSubmitting(true)
     setLastSubmitTime(now)
 
-    const minimumEffort = effortLevel === "quick"
-    const extraEffort = effortLevel === "high"
+    const minimumEffort = !isCustomLength && effortLevel === "quick"
+    const extraEffort = !isCustomLength && effortLevel === "high"
+    const maxWebResearchLoops = mode === "report" ? estimatedLoops : null
+    const targetWords = mode === "report" ? targetWordCount : null
 
     const selectedModelOption = MODEL_OPTIONS.find((opt) => opt.key === selectedModel)
 
@@ -501,6 +548,8 @@ export default function InitialScreen({ onBeginResearch }) {
       },
       fileContent,
       databaseInfo, // Pass database information to the research agent
+      maxWebResearchLoops,
+      targetWords,
     )
 
     setTimeout(() => {
@@ -792,8 +841,8 @@ export default function InitialScreen({ onBeginResearch }) {
 
         {/* Control Panel - Attached to card */}
         <div className="flex-shrink-0 border-t border-slate-200/60 bg-gradient-to-r from-[#f3f3f3]/80 via-white/50 to-slate-50/50 px-8 py-5 backdrop-blur-sm">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
               {/* Model selector */}
               <div className="flex items-center bg-white/90 backdrop-blur-sm border border-slate-200/60 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-200">
                 <div className="flex items-center justify-center w-11 h-11 bg-gradient-to-br from-slate-50 to-slate-100 border-r border-slate-200">
@@ -825,7 +874,7 @@ export default function InitialScreen({ onBeginResearch }) {
               {mode === "report" && (
                 <div className="flex items-center bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl p-1.5 gap-1 shadow-md">
                   <button
-                    onClick={() => setEffortLevel("quick")}
+                    onClick={() => applyEffortPreset("quick")}
                     className={`px-5 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${effortLevel === "quick"
                       ? "bg-white text-slate-900 shadow-sm"
                       : "text-slate-300 hover:text-white hover:bg-slate-700/50"
@@ -836,7 +885,7 @@ export default function InitialScreen({ onBeginResearch }) {
                     Quick
                   </button>
                   <button
-                    onClick={() => setEffortLevel("standard")}
+                    onClick={() => applyEffortPreset("standard")}
                     className={`px-5 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${effortLevel === "standard"
                       ? "bg-white text-slate-900 shadow-sm"
                       : "text-slate-300 hover:text-white hover:bg-slate-700/50"
@@ -847,7 +896,7 @@ export default function InitialScreen({ onBeginResearch }) {
                     Standard
                   </button>
                   <button
-                    onClick={() => setEffortLevel("high")}
+                    onClick={() => applyEffortPreset("high")}
                     className={`px-5 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${effortLevel === "high"
                       ? "bg-white text-slate-900 shadow-sm"
                       : "text-slate-300 hover:text-white hover:bg-slate-700/50"
@@ -857,6 +906,41 @@ export default function InitialScreen({ onBeginResearch }) {
                   >
                     Deep
                   </button>
+                </div>
+              )}
+
+              {mode === "report" && (
+                <div className="flex flex-col gap-2 rounded-xl border border-slate-200/60 bg-white/90 px-4 py-3 shadow-sm">
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
+                    <span>Target length</span>
+                    <span>{targetWordCount.toLocaleString()} words</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={MIN_TARGET_WORDS}
+                      max={MAX_TARGET_WORDS}
+                      step={100}
+                      value={targetWordCount}
+                      onChange={(e) => handleTargetWordCountChange(e.target.value)}
+                      className="w-40 accent-[#0176d3]"
+                      aria-label="Target report word count"
+                    />
+                    <input
+                      type="number"
+                      min={MIN_TARGET_WORDS}
+                      max={MAX_TARGET_WORDS}
+                      step={100}
+                      value={targetWordCount}
+                      onChange={(e) => handleTargetWordCountChange(e.target.value)}
+                      className="w-24 rounded-lg border border-slate-200 px-2 py-1 text-xs font-semibold text-slate-700"
+                      aria-label="Target report word count (number)"
+                    />
+                  </div>
+                  <div className="text-[11px] text-slate-500">
+                    Est. output: ~{estimatedLowWords.toLocaleString()}-{estimatedHighWords.toLocaleString()} words
+                    {isCustomLength ? " | Custom length" : ` | Preset: ${effortLevel}`}
+                  </div>
                 </div>
               )}
             </div>
@@ -895,4 +979,3 @@ export default function InitialScreen({ onBeginResearch }) {
     </div>
   )
 }
-

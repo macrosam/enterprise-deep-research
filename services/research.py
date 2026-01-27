@@ -513,6 +513,8 @@ class ResearchService:
         extra_effort: bool = False,
         minimum_effort: bool = False,
         benchmark_mode: bool = False,
+        max_web_research_loops: Optional[int] = None,
+        target_word_count: Optional[int] = None,
         streaming: bool = False,
         stream_id: str = None,
         queue: Optional[Queue] = None,
@@ -575,6 +577,9 @@ class ResearchService:
         logger.info(f"Starting research on topic: {query}")
         logger.info(
             f"Extra effort: {extra_effort}, Minimum effort: {minimum_effort}, Benchmark mode: {benchmark_mode}"
+        )
+        logger.info(
+            f"Max loops override: {max_web_research_loops}, Target word count: {target_word_count}"
         )
         logger.info(f"Database info: {database_info} (type: {type(database_info)})")
         logger.info(
@@ -747,6 +752,8 @@ class ResearchService:
                     "llm_model": model,  # Pass model from request
                     "user_prompt": query,  # Pass query from request
                     "database_info": database_info,  # Pass database_info to LangGraph
+                    "max_web_research_loops": max_web_research_loops,
+                    "target_word_count": target_word_count,
                     # Add other request-specific config here if needed
                     # e.g., "search_depth": search_depth_from_request
                 },

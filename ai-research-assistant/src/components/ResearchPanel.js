@@ -108,6 +108,8 @@ function ResearchPanel({
   modelName,
   uploadedFileContent,
   databaseInfo,
+  maxWebResearchLoops,
+  targetWordCount,
   onBeginResearch: onBeginResearchApp,
   isResearching: isResearchingApp,
   onReportGenerated,
@@ -1112,12 +1114,12 @@ function ResearchPanel({
   })
 
   // Generate hash of query parameters to detect duplicate requests
-  const getQueryHash = useCallback((q, extra, min, benchmark, provider, model, fileContent) => {
-    return `${q}:${extra}:${min}:${benchmark}:${provider}:${model}:${fileContent ? "file_present" : "no_file"}`
+  const getQueryHash = useCallback((q, extra, min, benchmark, provider, model, fileContent, loops, words) => {
+    return `${q}:${extra}:${min}:${benchmark}:${provider}:${model}:${loops || "none"}:${words || "none"}:${fileContent ? "file_present" : "no_file"}`
   }, [])
 
   const onBeginResearchInternal = useCallback(
-    (q, extra, min, benchmark, modelCfg, fileContent, databaseInfo) => {
+    (q, extra, min, benchmark, modelCfg, fileContent, databaseInfo, loops, words) => {
       // Clear all data
       setResearchItems([])
       setLocalFinalReportContent("")
@@ -1135,7 +1137,7 @@ function ResearchPanel({
       visualizationTrackingRef.current.clear()
       codeSnippetTrackingRef.current.clear()
 
-      onBeginResearchApp(q, extra, min, benchmark, modelCfg, fileContent, databaseInfo)
+      onBeginResearchApp(q, extra, min, benchmark, modelCfg, fileContent, databaseInfo, loops, words)
     },
     [
       onBeginResearchApp,
@@ -1175,6 +1177,8 @@ function ResearchPanel({
       modelName,
       uploadedFileContent,
       databaseInfo,
+      maxWebResearchLoops,
+      targetWordCount,
       handleResearchEvent,
       () => {
         setIsResearchComplete(true)
@@ -1195,15 +1199,17 @@ function ResearchPanel({
     )
   }, [
     query,
-    extraEffort,
-    minimumEffort,
-    benchmarkMode,
-    modelProvider,
-    modelName,
-    uploadedFileContent,
-    handleResearchEvent,
-    handleResearchError,
-    setIsResearchComplete,
+      extraEffort,
+      minimumEffort,
+      benchmarkMode,
+      modelProvider,
+      modelName,
+      uploadedFileContent,
+      maxWebResearchLoops,
+      targetWordCount,
+      handleResearchEvent,
+      handleResearchError,
+      setIsResearchComplete,
     setError,
     setIsLoadingResults,
   ])
@@ -1227,6 +1233,8 @@ function ResearchPanel({
       modelProvider,
       modelName,
       uploadedFileContent,
+      maxWebResearchLoops,
+      targetWordCount,
     )
     const lastQueryHash = researchRequestRef.current.queryHash
     const now = Date.now()
@@ -1259,6 +1267,8 @@ function ResearchPanel({
     modelProvider,
     modelName,
     uploadedFileContent,
+    maxWebResearchLoops,
+    targetWordCount,
     handleStartResearch,
     getQueryHash,
     isResearchComplete,
