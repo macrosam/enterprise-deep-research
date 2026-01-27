@@ -234,13 +234,10 @@ def get_max_loops(
         return 1
 
     env_max_loops = os.environ.get("MAX_WEB_RESEARCH_LOOPS")
-    base_max_loops = (
-        int(env_max_loops)
-        if env_max_loops
-        else int(configurable.max_web_research_loops)
-    )
-    print(f"  - Reading MAX_WEB_RESEARCH_LOOPS from environment: {env_max_loops}")
+    if env_max_loops:
+        print(f"  - MAX_WEB_RESEARCH_LOOPS env present: {env_max_loops}")
 
+    base_max_loops = int(configurable.max_web_research_loops)
     max_loops = base_max_loops
 
     print(
@@ -2148,12 +2145,23 @@ Integration Instructions:
     else:
         AUGMENT_KNOWLEDGE_CONTEXT = "No user-provided external knowledge available. Base the final report on web research results."
 
+    target_word_count = getattr(configurable, "target_word_count", None)
+    target_length_hint = ""
+    if target_word_count:
+        low = max(1, int(round(target_word_count * 0.85)))
+        high = max(1, int(round(target_word_count * 1.15)))
+        target_length_hint = (
+            f"\nTarget length: ~{target_word_count} words "
+            f"(acceptable range {low}-{high} if sources allow)."
+        )
+
     system_prompt = finalize_report_instructions.format(
         research_topic=state.research_topic,
         current_date=CURRENT_DATE,
         current_year=CURRENT_YEAR,
         one_year_ago=ONE_YEAR_AGO,
         AUGMENT_KNOWLEDGE_CONTEXT=AUGMENT_KNOWLEDGE_CONTEXT,
+        target_length_hint=target_length_hint,
     )
 
     # Construct the human message based on whether we used raw content or the summary

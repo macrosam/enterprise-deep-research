@@ -23,6 +23,13 @@ class ResearchRequest(BaseModel):
         None,
         description="The specific model to use (e.g., 'o3-mini', 'gemini-2.5-pro')",
     )
+    max_web_research_loops: Optional[int] = Field(
+        None,
+        description="Optional override for the maximum number of web research loops",
+    )
+    target_word_count: Optional[int] = Field(
+        None, description="Optional target word count for the final report"
+    )
     benchmark_mode: bool = Field(
         False, description="Whether to run in benchmark Q&A mode for testing accuracy"
     )

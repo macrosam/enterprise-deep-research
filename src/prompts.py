@@ -1432,6 +1432,7 @@ Source Hierarchy for Final Report:
 
 <TARGET_LENGTH>
 The final report should be comprehensive, typically in the range of 3,000–5,000+ words if enough information exists. This ensures adequate depth for thorough research. However, NEVER sacrifice factual accuracy for length - prioritize reliable, cited information over arbitrary word count.
+{target_length_hint}
 </TARGET_LENGTH>
 
 <ANTI_HALLUCINATION_DIRECTIVE>
