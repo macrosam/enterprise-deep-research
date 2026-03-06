@@ -71,8 +71,8 @@ We present a video demo of using EDR in web application for enterprise deep data
 git clone https://github.com/SalesforceAIResearch/enterprise-deep-research.git
 cd enterprise-deep-research
 
-# Python environment
-python -m venv venv
+# Python environment (requires Python 3.11+)
+python3.11 -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
